@@ -2,6 +2,7 @@ from Tkinter import *
 import csv
 from PIL import Image, ImageTk
 import time
+import tkMessageBox
 
 BUTTON_HEIGHT = 1
 BUTTON_WIDTH = 15
@@ -84,13 +85,14 @@ class Application(Frame):
         
     def stop_programma(self):
         self.ww = Entry(Toplevel(), text="Wachtwoord")
-        self.knop = Button(Toplevel(), text = "Ok", height = BUTTON_HEIGHT, width = BUTTON_WIDTH, command = self.controleer)
-        self.knop.pack()
         self.ww.pack()
+        self.ww.bind('<Return>', self.controleer)
         
-    def controleer(self):
+    def controleer(self, event):
         if self.ww.get()==WACHTWOORD:
             Frame.quit(self)
+        else:
+            tkMessageBox.showwarning("Wrong password", "The entered password is incorrect!")
         
     def maak_keuze(self):
         if self.content in minderjarigen:
