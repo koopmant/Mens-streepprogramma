@@ -1,6 +1,3 @@
-"""Automatisch streepsysteem van Studievereniging Mens. Gemaakt door Kiki Taris in december 2014.
-
-Toevoegen: ww pp, bestanden inladen per maand automatisch de juiste."""
 from Tkinter import *
 import csv
 from PIL import Image, ImageTk
