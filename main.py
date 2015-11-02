@@ -209,8 +209,8 @@ class Application(Frame):
                elif artikel == "Wijn":
                    lid.aantal_wijn += 1
                lid.hoeveelheid_geld += wat_prijs
-        self.registreer_aankoop()
         self.gestreepd_artikel = artikel
+        self.registreer_aankoop()
         
     def registreer_aankoop(self):
         self.bestelling = Text(self, width = 40, height = 1, wrap = WORD)
@@ -221,8 +221,8 @@ class Application(Frame):
         self.bestelling.configure(bg = "green2")
         Frame.after(self, WACHTTIJD, self.na_bestelling)
         self.opzien = Text(self, bg = ACHTERGRONDKLEUR, width = 100, height = 50)
-        self.tijd = string()
-        self.opzien.insert(0, self.tijd+":\t"+string(self.gestreepd_artikel)+"\n")
+        self.tijd = str()
+        self.opzien.insert(1.0, self.tijd+":\t"+str(self.gestreepd_artikel)+"\n")
         
     def na_bestelling(self):
         self.tekst_naam.delete(0.0, END)
@@ -235,7 +235,7 @@ class Application(Frame):
             self.lib_knop2[stuk].destroy()
         self.bestelling.destroy()
         self.tekst3.destroy()
-        ML2 = Image.open('C:\Users\Kiki\workspace\home\kts260\workspace\Introduction to Programming\Automatisch Streepsysteem AC\menslogo.JPG')
+        ML2 = Image.open('menslogo.JPG')
         achtergrond = ImageTk.PhotoImage(ML2)
         self.backlabel = Label(root, image= achtergrond)
         self.backlabel.image = achtergrond
