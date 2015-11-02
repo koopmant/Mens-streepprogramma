@@ -1,19 +1,25 @@
+"""Automatisch streepsysteem van Studievereniging Mens. Gemaakt door Kiki Taris in december 2014.
+
+Toevoegen: ww pp, bestanden inladen per maand automatisch de juiste."""
 from Tkinter import *
 import csv
 from PIL import Image, ImageTk
 import time
 
-WACHTTIJD = 500 #in miliseconden
+BUTTON_HEIGHT = 1
+BUTTON_WIDTH = 15
+WACHTTIJD = 1000 #in miliseconden
 PRIJS_BIER = 0.70
-PRIJS_TOSTI = 0.80
-PRIJS_KOEK = 0.30
-PRIJS_SNOEP = 0.50 
+PRIJS_TOSTI = 0.70
+PRIJS_KOEK = 0.40
+PRIJS_SNOEP = 0.60 
 PRIJS_FRIS = 0.65
 PRIJS_STERK = 1.00
 PRIJS_WIJN = 0.85
-PRIJS_SOEP = 0.35
-PRIJS_CHIPS = 1.10
+PRIJS_SOEP = 0.50
+PRIJS_CHIPS = 0.60
 ACHTERGRONDKLEUR = "white"
+WACHTWOORD = "Wachtwoord"
 
 class Lid():
     def __init__(self, naam, fris, tosti, bier, sterke_drank, wijn, koekjes, snoep, soep, chips, geld, geboortedatum):
@@ -69,36 +75,31 @@ class Application(Frame):
         text1 = "%s %s " %(a, euro)
         self.lijst_wat2 = ["Fris", "Bier", "Tosti", "Snoep", "Koek", "Wijn", "Sterke drank", "Soep", "Chips"]
         self.lijst_wat3 = ["Fris", "Tosti", "Snoep", "Koek", "Soep", "Chips"]
-        self.alg_lib = {"Fris": [PRIJS_FRIS, "Fris "+text1+"%.2f" %(PRIJS_FRIS), 'salmon', 'dark salmon', voor_fris], \
-                        "Bier": [PRIJS_BIER, "Bier "+text1+"%.2f" %(PRIJS_BIER),'OliveDrab1', 'OliveDrab3', voor_bier], \
-                        "Tosti": [PRIJS_TOSTI,  "Tosti "+text1+"%.2f" %(PRIJS_TOSTI), 'yellow', 'yellow3', voor_tosti], \
-                        "Snoep": [PRIJS_SNOEP, "Snoep "+text1+"%0.2f" %PRIJS_SNOEP, 'orange red', "OrangeRed3", voor_snoep], \
-                        "Koek": [PRIJS_KOEK, "Koek "+text1+"%.2f" %(PRIJS_KOEK), 'MediumPurple1', "MediumPurple3", voor_koek], \
-                        "Wijn": [PRIJS_WIJN, "Wijn "+text1+"%.2f" %PRIJS_WIJN,'spring green', "SpringGreen3", voor_wijn],\
-                        "Sterke drank": [PRIJS_STERK, "Sterke drank "+text1+"%.2f" %PRIJS_STERK, 'sky blue', "SkyBlue3", voor_sterk],\
-                        "Soep": [PRIJS_SOEP, "Soep "+text1+"%.2f" %PRIJS_SOEP, 'maroon1', "maroon2", voor_soep],\
-                        "Chips": [PRIJS_CHIPS, "Chips "+text1+"%.2f" %PRIJS_CHIPS, 'gray70', "gray60", voor_chips]}
+        self.alg_lib = {"Fris": [PRIJS_FRIS, "Fris "+text1+"%.2f" %(PRIJS_FRIS), 'salmon', 'dark salmon'], \
+                        "Bier": [PRIJS_BIER, "Bier "+text1+"%.2f" %(PRIJS_BIER),'OliveDrab1', 'OliveDrab3'], \
+                        "Tosti": [PRIJS_TOSTI,  "Tosti "+text1+"%.2f" %(PRIJS_TOSTI), 'yellow', 'yellow3'], \
+                        "Snoep": [PRIJS_SNOEP, "Snoep "+text1+"%0.2f" %PRIJS_SNOEP, 'orange red', "OrangeRed3"], \
+                        "Koek": [PRIJS_KOEK, "Koek "+text1+"%.2f" %(PRIJS_KOEK), 'MediumPurple1', "MediumPurple3"], \
+                        "Wijn": [PRIJS_WIJN, "Wijn "+text1+"%.2f" %PRIJS_WIJN,'spring green', "SpringGreen3"],\
+                        "Sterke drank": [PRIJS_STERK, "Sterke drank "+text1+"%.2f" %PRIJS_STERK, 'sky blue', "SkyBlue3"],\
+                        "Soep": [PRIJS_SOEP, "Soep "+text1+"%.2f" %PRIJS_SOEP, 'maroon1', "maroon2"],\
+                        "Chips": [PRIJS_CHIPS, "Chips "+text1+"%.2f" %PRIJS_CHIPS, 'gray70', "gray60"]}
         
     def stop_programma(self):
-        Frame.quit(self)
+        self.ww = Entry(Toplevel(), text="Wachtwoord")
+        self.knop = Button(Toplevel(), text = "Ok", height = BUTTON_HEIGHT, width = BUTTON_WIDTH, command = self.controleer)
+        self.knop.pack()
+        self.ww.pack()
+        
+    def controleer(self):
+        if self.ww.get()==WACHTWOORD:
+            Frame.quit(self)
         
     def maak_keuze(self):
-        BUTTON_HEIGHT = 1
-        BUTTON_WIDTH = 15
-        for rest in self.lijst_wat2:
-            if self.alg_lib[rest][4] == 0:
-                self.lijst_wat2.remove(rest)
-                if rest != "Bier" and rest!="Wijn" and rest!="Sterke drank":
-                    self.lijst_wat3.remove(rest)
         if self.content in minderjarigen:
             self.lijst_wat = self.lijst_wat3
         else:
             self.lijst_wat = self.lijst_wat2
-        if self.lijst_wat == []:
-            self.niets = Label(self, text = "Er is geen consumptie meer mogelijk voor u.", bg=ACHTERGRONDKLEUR, justify = LEFT)
-            self.niets.grid(row=4, column = 0, sticky = W)
-            Frame.after(self, WACHTTIJD+2500, self.na_bestelling)
-            Frame.after(self, WACHTTIJD+2500, self.niets.destroy)
         pos = 0
         self.lib_knop = {}
         for artikel in self.lijst_wat:
@@ -107,9 +108,87 @@ class Application(Frame):
                            bg = self.alg_lib[artikel][2], activebackground = self.alg_lib[artikel][3], command = action)
             self.lib_knop[artikel].grid(row = 4+pos, column = 0, sticky = W)
             pos += 1
+        self.verkeerd = Button(self, width = BUTTON_WIDTH, height = 2*BUTTON_HEIGHT, text = "Ik heb \nverkeerd gestreept.", \
+                               bg = "medium sea green", activebackground = "dark sea green", command=self.verkeerd_streep)
+        self.verkeerd.grid(row = 4+pos+1, column = 0, sticky = W)
         self.backlabel.destroy()
         self.nu_gestreept()
+        self.al_gestreept = []
 
+    def verkeerd_streep(self):
+        self.verkeerd.destroy()
+        for artikel in self.lijst_wat:
+            self.lib_knop[artikel].destroy()
+        for lid in leden.rij:
+            if lid.naam == self.content:
+                if lid.aantal_bier+lid.aantal_chips+lid.aantal_fris+lid.aantal_koekjes==0+lid.aantal_snoep+lid.aantal_soep+lid.aantal_sterke_drank+lid.aantal_tosti+lid.aantal_wijn==0:
+                    self.doorgaan = Button(self, width = BUTTON_WIDTH, height = 10*BUTTON_HEIGHT, text = "U hebt nog niets gestreepd deze maand. Neem contact op met AC of Bestuur om fouten in de voorgaande maand te wijzigen.", bg = "pale green", \
+                                        activebackground = "spring green", wraplength=BUTTON_WIDTH*6,command = self.na_fout) 
+                    self.doorgaan.grid(row = 6, column = 0, sticky = W) 
+                else: 
+                    if lid.aantal_bier > 0:
+                        self.al_gestreept.append("Bier")
+                    if lid.aantal_chips > 0:
+                        self.al_gestreept.append("Chips")
+                    if lid.aantal_fris > 0:
+                        self.al_gestreept.append("Fris")                    
+                    if lid.aantal_koekjes > 0:
+                        self.al_gestreept.append("Koek")
+                    if lid.aantal_snoep > 0:
+                        self.al_gestreept.append("Snoep")                    
+                    if lid.aantal_soep > 0:
+                        self.al_gestreept.append("Soep")                    
+                    if lid.aantal_sterke_drank > 0:
+                        self.al_gestreept.append("Sterke drank")                    
+                    if lid.aantal_tosti >= 1:
+                        self.al_gestreept.append("Tosti")                    
+                    if lid.aantal_wijn >= 1:
+                        self.al_gestreept.append("Wijn")     
+                    pos = 0
+                    self.lib_knop2 = {}
+                    for artikel in self.al_gestreept:
+                        action = lambda x = artikel: self.streep_weg(x)
+                        self.lib_knop2[artikel] = Button(self, width = BUTTON_WIDTH, height = BUTTON_HEIGHT, text = self.alg_lib[artikel][1],\
+                                            bg = self.alg_lib[artikel][2], activebackground = self.alg_lib[artikel][3], command = action)
+                        self.lib_knop2[artikel].grid(row = 4+pos, column = 0, sticky = W)
+                        pos += 1
+
+    def na_fout(self):
+        self.doorgaan.destroy()
+        self.tekst3.destroy()
+        self.na_bestelling()
+
+    def streep_weg(self, artikel):
+        wat_prijs = self.alg_lib[artikel][0]
+        for lid in leden.rij:
+           if lid.naam == self.content:
+               if artikel == "Fris":
+                   lid.aantal_fris -= 1
+               elif artikel == "Bier":
+                   lid.aantal_bier -= 1
+               elif artikel == "Chips":
+                    lid.aantal_chips -= 1
+               elif artikel == "Koekjes":
+                   lid.aantal_koekjes -= 1 
+               elif artikel == "Snoep":
+                   lid.aantal_snoep -= 1
+               elif artikel == "Tosti":
+                   lid.aantal_tosti -= 1
+               elif artikel == "Soep":
+                   lid.aantal_soep -= 1
+               elif artikel == "Sterke drank":
+                   lid.aantal_sterke_drank -= 1
+               elif artikel == "Wijn":
+                   lid.aantal_wijn -= 1
+               lid.hoeveelheid_geld -= wat_prijs
+        self.bestelling = Text(self, width = 40, height = 1, wrap = WORD)
+        self.bestelling.delete(0.0, END)  
+        self.bestelling.grid(row = 50, column = 0, columnspan = 2, sticky = W)
+        message = "Uw annulering is geregistreerd."
+        self.bestelling.insert(0.0, message)
+        self.bestelling.configure(bg = "green2")
+        Frame.after(self, WACHTTIJD, self.na_bestelling)
+                    
     def doe_aankoop(self, artikel):
         wat_prijs = self.alg_lib[artikel][0]
         for lid in leden.rij:
@@ -132,9 +211,9 @@ class Application(Frame):
                    lid.aantal_sterke_drank += 1
                elif artikel == "Wijn":
                    lid.aantal_wijn += 1
-               self.alg_lib[artikel][4] -= 1
                lid.hoeveelheid_geld += wat_prijs
         self.registreer_aankoop()
+        self.gestreepd_artikel = artikel
         
     def registreer_aankoop(self):
         self.bestelling = Text(self, width = 40, height = 1, wrap = WORD)
@@ -144,13 +223,19 @@ class Application(Frame):
         self.bestelling.insert(0.0, message)
         self.bestelling.configure(bg = "green2")
         Frame.after(self, WACHTTIJD, self.na_bestelling)
+        self.opzien = Text(self, bg = ACHTERGRONDKLEUR, width = 100, height = 50)
+        self.tijd = string()
+        self.opzien.insert(0, self.tijd+":\t"+string(self.gestreepd_artikel)+"\n")
         
     def na_bestelling(self):
         self.tekst_naam.delete(0.0, END)
         self.tekst_naam.configure(background = ACHTERGRONDKLEUR)
         self.naam.delete(0, END)
+        self.verkeerd.destroy()
         for artikel in self.lijst_wat:
             self.lib_knop[artikel].destroy()
+        for stuk in self.al_gestreept:
+            self.lib_knop2[stuk].destroy()
         self.bestelling.destroy()
         self.tekst3.destroy()
         ML2 = Image.open('C:\Users\Kiki\workspace\home\kts260\workspace\Introduction to Programming\Automatisch Streepsysteem AC\menslogo.JPG')
@@ -250,16 +335,6 @@ with open('december 2014.csv', 'rb') as csvfile:
             voornamen.append(row[0].split()[0])
             if check_minderjarig(row):
                 minderjarigen.append(row[0])
-        elif row[0] == "Voorraad":
-            voor_fris = int(row[1])
-            voor_tosti = int(row[2])
-            voor_bier = int(row[3])
-            voor_sterk = int(row[4])
-            voor_wijn = int(row[5])
-            voor_koek = int(row[6])
-            voor_snoep = int(row[7])
-            voor_soep = int(row[8])
-            voor_chips = int(row[9])
         elif row[0] == 'Totaal':
             totaal_fris = int(row[1])
             totaal_tosti = int(row[2])
@@ -284,7 +359,9 @@ with open('december 2014.csv', 'rb') as csvfile:
             totaal_omzet = float(row[10])
     root = Tk()
     root.title("Streepsysteem Studievereniging Mens, versie januari 2015")
-    root.geometry("1000x600")
+    Xx = root.winfo_screenwidth()
+    Yy = root.winfo_screenheight()
+    root.geometry("%dx%d" %(Xx,Yy))
     root.configure(background = ACHTERGRONDKLEUR)
     app = Application(root)
     root.mainloop()
@@ -307,17 +384,15 @@ with open('december 2014.csv', 'rb') as csvfile:
             totaal_soep += row.aantal_soep
         file_now2.writerow(['Totaal', totaal_fris, totaal_tosti, totaal_bier, totaal_sterk, totaal_wijn, totaal_koek, \
                             totaal_snoep, totaal_soep, totaal_chips, totaal_geld, " "])
-        omzet_fris += totaal_fris*PRIJS_FRIS
-        omzet_bier += totaal_bier*PRIJS_BIER
-        omzet_chips += totaal_chips*PRIJS_CHIPS
-        omzet_koek += totaal_koek*PRIJS_KOEK
-        omzet_snoep += totaal_snoep*PRIJS_SNOEP
-        omzet_soep += totaal_soep*PRIJS_SOEP
-        omzet_sterk += totaal_sterk*PRIJS_STERK
-        omzet_tosti += totaal_tosti*PRIJS_TOSTI
-        omzet_wijn += totaal_wijn*PRIJS_WIJN
+        omzet_fris = totaal_fris*PRIJS_FRIS
+        omzet_bier = totaal_bier*PRIJS_BIER
+        omzet_chips = totaal_chips*PRIJS_CHIPS
+        omzet_koek = totaal_koek*PRIJS_KOEK
+        omzet_snoep = totaal_snoep*PRIJS_SNOEP
+        omzet_soep = totaal_soep*PRIJS_SOEP
+        omzet_sterk = totaal_sterk*PRIJS_STERK
+        omzet_tosti = totaal_tosti*PRIJS_TOSTI
+        omzet_wijn = totaal_wijn*PRIJS_WIJN
         totaal_omzet = omzet_bier+omzet_chips+omzet_fris+omzet_koek+omzet_snoep+omzet_soep+omzet_sterk+omzet_tosti+omzet_wijn
         file_now2.writerow(['Omzet', omzet_fris, omzet_tosti, omzet_bier, omzet_sterk, omzet_wijn, omzet_koek, omzet_snoep, omzet_soep,\
                             omzet_chips, totaal_omzet, " "])
-        file_now2.writerow(["Voorraad", voor_fris, voor_tosti, voor_bier, voor_sterk, voor_wijn, voor_koek, voor_snoep, voor_soep,\
-                            voor_chips, " ", " "])
