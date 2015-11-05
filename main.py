@@ -3,6 +3,7 @@ import csv
 import Image, ImageTk
 import time
 import tkMessageBox
+import os, sys, shutil
 
 #===============================================================================
 # Aan te passen door Penningmeester AC
@@ -27,6 +28,20 @@ BUTTON_WIDTH = 15
 WACHTWOORD = "Wachtwoord"
 WACHTTIJD = 1000 #in miliseconden
 debuggen = False
+
+#===============================================================================
+# Controleer of benodigde bestanden bestaan, stop anders direct en toon missende bestanden in errorlog.
+#===============================================================================
+
+try:
+    missingfiles=[]
+    for essentialfile in ['menslogo.png','Streeplijst_0000-00.csv']:
+        if not os.path.isfile(essentialfile):
+            missingfiles.append(essentialfile)
+    if not missingfiles == []:
+        raise IOError('404: Bestand(en) niet aanwezig. Zo kan ik toch niet werken...', missingfiles)
+except IOError as err:
+    sys.exit(err)
 
 
 class MainApplication(tk.Tk):
@@ -416,10 +431,13 @@ def check_minderjarig(row):
                 meerderjarig = True
     return meerderjarig
 
+maandlijstbestand = 'Streeplijst_'+time.strftime("%Y-%m")+'.csv'
 
+# Als de lijst van deze maand nog niet bestaat, maak deze dan aan
+if not os.path.isfile(maandlijstbestand):
+    shutil.copyfile('Streeplijst_0000-00.csv', maandlijstbestand)
 
-
-with open('december 2014.csv', 'rb') as csvfile:
+with open(maandlijstbestand, 'rb') as csvfile:
     file_now = csv.reader(csvfile, delimiter = ';')
     leden = LedenLijst()
     namen = []
@@ -461,7 +479,7 @@ with open('december 2014.csv', 'rb') as csvfile:
     root.mainloop()
     
     
-    with open('januari 2015.csv', 'wb') as csvfile2:
+    with open(maandlijstbestand+'temp', 'wb') as csvfile2:
         file_now2 = csv.writer(csvfile2, delimiter = ';')
         file_now2.writerow(['Naam', 'Fris', 'Tosti', 'Bier', 'Sterke drank', 'Wijn', 'Koek', 'Snoep', 'Soep', 'Chips', 'Geld', 'Geboortedatum'])    
         for row in leden.rij:
@@ -492,3 +510,7 @@ with open('december 2014.csv', 'rb') as csvfile:
         totaal_omzet = omzet_bier+omzet_chips+omzet_fris+omzet_koek+omzet_snoep+omzet_soep+omzet_sterk+omzet_tosti+omzet_wijn
         file_now2.writerow(['Omzet', omzet_fris, omzet_tosti, omzet_bier, omzet_sterk, omzet_wijn, omzet_koek, omzet_snoep, omzet_soep,\
                             omzet_chips, totaal_omzet, " "])
+    
+shutil.copyfile(maandlijstbestand+'temp', maandlijstbestand)
+os.remove(maandlijstbestand+'temp')
+                
