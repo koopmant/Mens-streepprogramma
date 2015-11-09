@@ -23,25 +23,29 @@ PRIJS_CHIPS = 0.60
 #===============================================================================
 
 VERSIE = "November 2015"
-BUTTON_HEIGHT = 1
-BUTTON_WIDTH = 15
 WACHTWOORD = "Wachtwoord"
 WACHTTIJD = 1000 #in miliseconden
 debuggen = False
 
 #===============================================================================
-# Controleer of benodigde bestanden bestaan, stop anders direct en toon missende bestanden in errorlog.
+# Controleer of benodigde bestanden bestaan, stop anders direct en toon missende 
+# bestanden in errorlog.
 #===============================================================================
 
 try:
     missingfiles=[]
-    for essentialfile in ['menslogo.png','Streeplijst_0000-00.csv']:
+    for essentialfile in ['Streeplijst_0000-00.csv','Images\\menslogo.png',\
+                          'Images\\Bier.png','Images\\Fris.png','Images\\Snoep.png',\
+                          'Images\\Koek.png','Images\\Tosti.png','Images\\Wijn.png',\
+                          'Images\\Sterk.png','Images\\Soep.png','Images\\Chips.png']:
         if not os.path.isfile(essentialfile):
             missingfiles.append(essentialfile)
     if not missingfiles == []:
-        raise IOError('404: Bestand(en) niet aanwezig. Zo kan ik toch niet werken...', missingfiles)
+        raise IOError('---'+time.strftime("%Y-%m-%d - %H:%M:%S")+'--- Bestand(en) niet aanwezig. Zo kan ik toch niet werken...', missingfiles)
 except IOError as err:
-    sys.exit(err)
+    sys.exit(err.args)
+
+producten=[["Fris",PRIJS_FRIS],["Tosti",PRIJS_TOSTI],["Soep",PRIJS_SOEP],["Snoep",PRIJS_SNOEP],["Koek",PRIJS_KOEK],["Chips",PRIJS_CHIPS],["Bier",PRIJS_BIER],["Wijn",PRIJS_WIJN],["Sterk",PRIJS_STERK]]
 
 
 class MainApplication(tk.Tk):
@@ -115,6 +119,7 @@ class LoginScherm(tk.Frame):
         self.controller = controller
         tk.Frame.__init__(self,parent)
         self.Achtergrondkleur = "yellow"
+        tk.Frame.configure(self,background = self.Achtergrondkleur)
         
         self.pack(side="top", fill="both", expand=True)
         # Invoer van eigen naam
@@ -123,12 +128,12 @@ class LoginScherm(tk.Frame):
         self.naam.bind("<Return>", self.check_name)
         
         # Informatie ruimte
-        self.response = tk.Text(self, font="Calibri, 16", bd=0, width=25, height=4, bg=self.Achtergrondkleur, fg="black")
+        self.response = tk.Text(self, font="Calibri, 16", bd=0, width=25, height=4, bg=self.Achtergrondkleur, wrap=tk.WORD)
         self.response.tag_configure("center", justify='center')
         self.response.pack(padx=100)
         
         # Mens-logo
-        ML = Image.open('menslogo.png')
+        ML = Image.open('Images\menslogo.png')
         achtergrond = ImageTk.PhotoImage(ML.resize((408,432), Image.ANTIALIAS))
         self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
         self.backlabel.image = achtergrond
@@ -145,7 +150,7 @@ class LoginScherm(tk.Frame):
         self.response.configure(bg=self.Achtergrondkleur, fg="black")
         if voornamen.count(first_name) == 0:
             self.response.delete(1.0,tk.END)
-            self.response.insert(1.0, "Naam onbekend, \nprobeer opnieuw.")
+            self.response.insert(1.0, "\nNaam onbekend, probeer opnieuw.")
             self.response.tag_add("center", 1.0, "end")
             self.response.configure(background = "red4", fg = "snow")            
         elif voornamen.count(first_name) == 1:
@@ -175,6 +180,12 @@ class LoginScherm(tk.Frame):
         self.controller.content = vol_naam
         for person in self.nu_rij:
             self.btn_dict[person].destroy()
+        # Mens-logo
+        ML = Image.open('menslogo.png')
+        achtergrond = ImageTk.PhotoImage(ML.resize((408,432), Image.ANTIALIAS))
+        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
+        self.backlabel.image = achtergrond
+        self.backlabel.pack(pady=50)
         self.login_succes()
         
     def login_succes(self):
@@ -193,183 +204,82 @@ class StreepScherm(tk.Frame):
         self.controller = controller
         tk.Frame.__init__(self, parent)
         self.Achtergrondkleur = "medium spring green"
+        self.lettertype = ("Calibri, 16")
+        tk.Frame.configure(self,background = self.Achtergrondkleur)
+        self.images = {}
+        self.gestreept = {}
+        self.buttons = {}
+        for P in producten:
+            self.images[P[0]] = ImageTk.PhotoImage(Image.open("Images\\"+P[0]+".png"))
+            self.gestreept[P[0]] = 0
         
-        self.grid()
-        ML = Image.open('menslogo.png')
-        achtergrond = ImageTk.PhotoImage(ML.resize((408,432), Image.ANTIALIAS))
-        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
-        self.backlabel.image = achtergrond
-        self.backlabel.grid(row= 100, column = 100)
-        self.tekst_naam = tk.Text(self, width=40, height = 2, wrap = tk.WORD, background = self.Achtergrondkleur)
-        self.tekst_naam.grid(row = 3, column = 0, sticky = tk.W, columnspan = 2)
-        self.stopknop = tk.Button(self, text = "Afsluiten", command = self.controller.stop_programma, bg = 'red4', fg = "snow", \
-                               activebackground = "red4", activeforeground = "snow")
-        self.stopknop.grid(row = 0, column = 2, sticky = tk.E)
-        euro = u"\u20AC"
-        a = u"\u00E0"
-        text1 = "%s %s " %(a, euro)
-        self.lijst_wat2 = ["Fris", "Bier", "Tosti", "Snoep", "Koek", "Wijn", "Sterke drank", "Soep", "Chips"]
-        self.lijst_wat3 = ["Fris", "Tosti", "Snoep", "Koek", "Soep", "Chips"]
-        self.alg_lib = {"Fris": [PRIJS_FRIS, "Fris "+text1+"%.2f" %(PRIJS_FRIS), 'salmon', 'dark salmon'], \
-                        "Bier": [PRIJS_BIER, "Bier "+text1+"%.2f" %(PRIJS_BIER),'OliveDrab1', 'OliveDrab3'], \
-                        "Tosti": [PRIJS_TOSTI,  "Tosti "+text1+"%.2f" %(PRIJS_TOSTI), 'yellow', 'yellow3'], \
-                        "Snoep": [PRIJS_SNOEP, "Snoep "+text1+"%0.2f" %PRIJS_SNOEP, 'orange red', "OrangeRed3"], \
-                        "Koek": [PRIJS_KOEK, "Koek "+text1+"%.2f" %(PRIJS_KOEK), 'MediumPurple1', "MediumPurple3"], \
-                        "Wijn": [PRIJS_WIJN, "Wijn "+text1+"%.2f" %PRIJS_WIJN,'spring green', "SpringGreen3"],\
-                        "Sterke drank": [PRIJS_STERK, "Sterke drank "+text1+"%.2f" %PRIJS_STERK, 'sky blue', "SkyBlue3"],\
-                        "Soep": [PRIJS_SOEP, "Soep "+text1+"%.2f" %PRIJS_SOEP, 'maroon1', "maroon2"],\
-                        "Chips": [PRIJS_CHIPS, "Chips "+text1+"%.2f" %PRIJS_CHIPS, 'gray70', "gray60"]}
-        self.bestelling = tk.Text(self, width = 40, height = 1, wrap = tk.WORD)
-        self.bestelling.delete(0.0, tk.END)  
-        self.bestelling.grid(row = 50, column = 0, columnspan = 2, sticky = tk.W)
+        self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        for x in range(7):
+            tk.Grid.columnconfigure(self, x, weight=1)
+        
+        for y in range(18):
+            tk.Grid.rowconfigure(self, y, weight=1)
+        
+        action = lambda: self.doe_aankoop()
+        self.stopknop = tk.Button(self, text = "Doe aankoop", command = action, font=self.lettertype).grid(row = 1, column = 2, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.tekst_naam = tk.Text(self, width=20, height = 2, bd=0, background = self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_naam.tag_configure("center", justify='center')
+        self.tekst_naam.grid(row = 1, column = 5, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.tekst_consumptie = tk.Text(self, width=30, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_consumptie.grid(row = 2, column = 5, rowspan = 2, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.tekst_nu_gestreept = tk.Text(self, width=30, height=10, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_nu_gestreept.grid(row = 4, column = 5, sticky=tk.N+tk.S+tk.E+tk.W)
+        
+        self.euro = u"\u20AC"
+                
+        posrow=2; poscol=1
+        for P in producten:
+            action = lambda x = P[0]: self.nu_gestreept(x)
+            tk.Button(self, image=self.images[P[0]], text="%s %.2f" %(self.euro, P[1]), compound="top", font=self.lettertype, bd=0, bg=self.Achtergrondkleur, command=action).grid(row=posrow, column=poscol)
+            if poscol==3:
+                poscol=1
+                posrow+=1
+            else:
+                poscol+=1
     
     def voorbereiding(self):
         # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
-        self.tekst_naam.delete(1.0, tk.END)
-        message = "Geregistreerd als "+self.controller.content+", kies uw consumptie. \n"
-        self.tekst_naam.insert(0.0, message)
-        self.tekst_naam.configure(background = "green2", fg = "black")
-        if self.controller.content in minderjarigen:
-            self.lijst_wat = self.lijst_wat3
-        else:
-            self.lijst_wat = self.lijst_wat2
-        pos = 0
-        self.lib_knop = {}
-        for artikel in self.lijst_wat:
-            action = lambda x = artikel: self.doe_aankoop(x)
-            self.lib_knop[artikel] = tk.Button(self, width = BUTTON_WIDTH, height = BUTTON_HEIGHT, text = self.alg_lib[artikel][1], \
-                           bg = self.alg_lib[artikel][2], activebackground = self.alg_lib[artikel][3], command = action)
-            self.lib_knop[artikel].grid(row = 4+pos, column = 0, sticky = tk.W)
-            pos += 1
-        self.verkeerd = tk.Button(self, width = BUTTON_WIDTH, height = 2*BUTTON_HEIGHT, text = "Ik heb \nverkeerd gestreept.", \
-                               bg = "medium sea green", activebackground = "dark sea green", command=self.verkeerd_streep)
-        self.verkeerd.grid(row = 4+pos+1, column = 0, sticky = tk.W)
-        self.nu_gestreept()
-        self.al_gestreept = []
-        self.bestelling.delete(1.0, tk.END)
-        self.bestelling.configure(bg = self.Achtergrondkleur)
-        
-    def verkeerd_streep(self):
-        self.verkeerd.destroy()
-        for artikel in self.lijst_wat:
-            self.lib_knop[artikel].destroy()
+        self.tekst_naam.insert(0.0, "\nHoi "+self.controller.content+"!")
+        self.tekst_naam.tag_add("center", 0.0, "end")
+        al_gestreept = "\n\nHuidige aantal consumpties:\n\n"
         for lid in leden.rij:
             if lid.naam == self.controller.content:
-                if lid.aantal_bier+lid.aantal_chips+lid.aantal_fris+lid.aantal_koekjes==0+lid.aantal_snoep+lid.aantal_soep+lid.aantal_sterke_drank+lid.aantal_tosti+lid.aantal_wijn==0:
-                    self.doorgaan = tk.Button(self, width = BUTTON_WIDTH, height = 10*BUTTON_HEIGHT, text = "U hebt nog niets gestreepd deze maand. Neem contact op met AC of Bestuur om fouten in de voorgaande maand te wijzigen.", bg = "pale green", \
-                                        activebackground = "spring green", wraplength=BUTTON_WIDTH*6,command = self.na_fout) 
-                    self.doorgaan.grid(row = 6, column = 0, sticky = tk.W) 
-                else: 
-                    if lid.aantal_bier > 0:
-                        self.al_gestreept.append("Bier")
-                    if lid.aantal_chips > 0:
-                        self.al_gestreept.append("Chips")
-                    if lid.aantal_fris > 0:
-                        self.al_gestreept.append("Fris")                    
-                    if lid.aantal_koekjes > 0:
-                        self.al_gestreept.append("Koek")
-                    if lid.aantal_snoep > 0:
-                        self.al_gestreept.append("Snoep")                    
-                    if lid.aantal_soep > 0:
-                        self.al_gestreept.append("Soep")                    
-                    if lid.aantal_sterke_drank > 0:
-                        self.al_gestreept.append("Sterke drank")                    
-                    if lid.aantal_tosti >= 1:
-                        self.al_gestreept.append("Tosti")                    
-                    if lid.aantal_wijn >= 1:
-                        self.al_gestreept.append("Wijn")     
-                    pos = 0
-                    self.lib_knop2 = {}
-                    for artikel in self.al_gestreept:
-                        action = lambda x = artikel: self.streep_weg(x)
-                        self.lib_knop2[artikel] = tk.Button(self, width = BUTTON_WIDTH, height = BUTTON_HEIGHT, text = self.alg_lib[artikel][1],\
-                                            bg = self.alg_lib[artikel][2], activebackground = self.alg_lib[artikel][3], command = action)
-                        self.lib_knop2[artikel].grid(row = 4+pos, column = 0, sticky = tk.W)
-                        pos += 1
-
-    def na_fout(self):
-        self.doorgaan.destroy()
-        self.tekst3.destroy()
-        self.na_bestelling()
-
-    def streep_weg(self, artikel):
-        wat_prijs = self.alg_lib[artikel][0]
+                for P in producten:
+                    if lid.aantal[P[0]] > 0:
+                        al_gestreept += P[0]+": \t\t%.0f \n" %(lid.aantal[P[0]])
+                self.tekst_consumptie.insert(0.0, al_gestreept+"_______________________\nHuidig saldo \t\t%s %.2f" %(self.euro, lid.hoeveelheid_geld))
+        
+    def doe_aankoop(self):
         for lid in leden.rij:
             if lid.naam == self.controller.content:
-                if artikel == "Fris":
-                    lid.aantal_fris -= 1
-                elif artikel == "Bier":
-                    lid.aantal_bier -= 1
-                elif artikel == "Chips":
-                    lid.aantal_chips -= 1
-                elif artikel == "Koekjes":
-                    lid.aantal_koekjes -= 1 
-                elif artikel == "Snoep":
-                    lid.aantal_snoep -= 1
-                elif artikel == "Tosti":
-                    lid.aantal_tosti -= 1
-                elif artikel == "Soep":
-                    lid.aantal_soep -= 1
-                elif artikel == "Sterke drank":
-                    lid.aantal_sterke_drank -= 1
-                elif artikel == "Wijn":
-                    lid.aantal_wijn -= 1
-                lid.hoeveelheid_geld -= wat_prijs
-        self.bestelling = tk.Text(self, width = 40, height = 1, wrap = tk.WORD)
-        self.bestelling.delete(0.0, tk.END)  
-        self.bestelling.grid(row = 50, column = 0, columnspan = 2, sticky = tk.W)
-        message = "Uw annulering is geregistreerd."
-        self.bestelling.insert(0.0, message)
-        self.bestelling.configure(bg = "green2")
-        tk.Frame.after(self, WACHTTIJD, self.na_bestelling)
-                    
-    def doe_aankoop(self, artikel):
-        wat_prijs = self.alg_lib[artikel][0]
-        for lid in leden.rij:
-            if lid.naam == self.controller.content:
-                if artikel == "Fris":
-                    lid.aantal_fris += 1
-                elif artikel == "Bier":
-                    lid.aantal_bier += 1
-                elif artikel == "Chips":
-                    lid.aantal_chips += 1
-                elif artikel == "Koekjes":
-                    lid.aantal_koekjes += 1 
-                elif artikel == "Snoep":
-                    lid.aantal_snoep += 1
-                elif artikel == "Tosti":
-                    lid.aantal_tosti += 1
-                elif artikel == "Soep":
-                    lid.aantal_soep += 1
-                elif artikel == "Sterke drank":
-                    lid.aantal_sterke_drank += 1
-                elif artikel == "Wijn":
-                    lid.aantal_wijn += 1
-                lid.hoeveelheid_geld += wat_prijs
-        self.gestreepd_artikel = artikel
-        self.registreer_aankoop()
-        
-    def registreer_aankoop(self):
-        message = "Uw bestelling is geregistreerd."
-        self.bestelling.insert(0.0, message)
-        self.bestelling.configure(bg = "green2")
-        tk.Frame.after(self, WACHTTIJD, self.na_bestelling)
-        self.opzien = tk.Text(self, bg = self.Achtergrondkleur, width = 100, height = 50)
-        self.tijd = str()
-        self.opzien.insert(1.0, self.tijd+":\t"+str(self.gestreepd_artikel)+"\n")
-        
-    def na_bestelling(self):
+                lid.hoeveelheid_geld += self.additief_saldo
+                for P in producten:
+                    lid.aantal[P[0]] += self.gestreept[P[0]]
+                    self.gestreept[P[0]]=0
         self.controller.show_frame(LoginScherm)
+        self.tekst_consumptie.delete(0.0, tk.END)
+        self.tekst_nu_gestreept.delete(0.0, tk.END)
+        self.tekst_naam.delete(0.0, tk.END)
         
-    def nu_gestreept(self):
+    def nu_gestreept(self, artikel):
+        self.gestreept[artikel]+=1
+        self.tekst_nu_gestreept.delete(0.0, tk.END)
+        self.additief_saldo=0
+        nu_gestreept = ""
+        for P in producten:
+            if self.gestreept[P[0]] > 0:
+                nu_gestreept += P[0]+": \t\t%.0f \n" %(self.gestreept[P[0]])
+                self.additief_saldo += self.gestreept[P[0]]*P[1]
         for lid in leden.rij:
-            if lid.naam == self.controller.content: 
-                nu_gestreept2 = "Huidige aantal consumpties: \nFris: \t\t%.0f \nBier: \t\t%.0f \nTosti: \t\t%.0f \nSnoep: \t\t%.0f\
-                \nKoek: \t\t%.0f \nWijn: \t\t%.0f \nSterke drank:  \t%.0f \nSoep: \t\t%.0f \nChips:\t\t%.0f \nDit komt totaal op %.2f euro." \
-                %(lid.aantal_fris, lid.aantal_bier, lid.aantal_tosti, lid.aantal_snoep, lid.aantal_koekjes, lid.aantal_wijn, \
-                  lid.aantal_sterke_drank, lid.aantal_soep, lid.aantal_chips, lid.hoeveelheid_geld)
-                self.tekst3 = tk.Label(self, text = nu_gestreept2, bg = self.Achtergrondkleur, justify = tk.LEFT)
-                self.tekst3.grid(row = 4, column = 1, rowspan = 9, sticky = tk.S)
+            if lid.naam == self.controller.content:
+                nu_gestreept += "_______________________\nAdditief saldo \t\t%s %.2f\n\n_______________________\nNieuw saldo \t\t%s %.2f" %(self.euro, self.additief_saldo, self.euro, lid.hoeveelheid_geld+self.additief_saldo)
+        self.tekst_nu_gestreept.insert(0.0, nu_gestreept)
+        
     
 
 
@@ -378,26 +288,29 @@ class AdminScherm(tk.Frame):
     def __init__(self, parent, controller):
         self.controller = controller
         tk.Frame.__init__(self, parent)
+        self.Achtergrondkleur = "deep sky blue"
+        tk.Frame.configure(self,background = self.Achtergrondkleur)
 
     def voorbereiding(self):
         # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
         pass
         
 class Lid():
-    def __init__(self, naam, fris, tosti, bier, sterke_drank, wijn, koekjes, snoep, soep, chips, geld, geboortedatum):
+    def __init__(self, naam, fris, tosti, bier, sterk, wijn, koek, snoep, soep, chips, geld, geboortedatum):
         name = naam.split()
         self.voornaam = name[0]
         self.achternaam = ' '.join(name[1:len(name)])
         self.naam = str(naam)
-        self.aantal_fris = int(fris)
-        self.aantal_tosti = int(tosti)
-        self.aantal_bier = int(bier)
-        self.aantal_sterke_drank = int(sterke_drank)
-        self.aantal_wijn = int(wijn)
-        self.aantal_snoep = int(snoep)
-        self.aantal_koekjes = int(koekjes)
-        self.aantal_soep = int(soep)
-        self.aantal_chips = int(chips)
+        self.aantal={}
+        self.aantal["Fris"] = int(fris)
+        self.aantal["Tosti"] = int(tosti)
+        self.aantal["Bier"] = int(bier)
+        self.aantal["Sterk"] = int(sterk)
+        self.aantal["Wijn"] = int(wijn)
+        self.aantal["Snoep"] = int(snoep)
+        self.aantal["Koek"] = int(koek)
+        self.aantal["Soep"] = int(soep)
+        self.aantal["Chips"] = int(chips)
         self.hoeveelheid_geld = float(geld)
         self.geboortedatum = geboortedatum
 
@@ -484,18 +397,18 @@ with open(maandlijstbestand, 'rb') as csvfile:
         file_now2.writerow(['Naam', 'Fris', 'Tosti', 'Bier', 'Sterke drank', 'Wijn', 'Koek', 'Snoep', 'Soep', 'Chips', 'Geld', 'Geboortedatum'])    
         for row in leden.rij:
             volled_naam = "%s %s" %(row.voornaam, row.achternaam)
-            file_now2.writerow([volled_naam, row.aantal_fris, row.aantal_tosti, row.aantal_bier, row.aantal_sterke_drank, \
-                row.aantal_wijn, row.aantal_koekjes, row.aantal_snoep, row.aantal_soep, row.aantal_chips, row.hoeveelheid_geld, row.geboortedatum])
-            totaal_fris += row.aantal_fris
-            totaal_tosti += row.aantal_tosti
-            totaal_bier += row.aantal_bier
+            file_now2.writerow([volled_naam, row.aantal["Fris"], row.aantal["Tosti"], row.aantal["Bier"], row.aantal["Sterk"], \
+                row.aantal["Wijn"], row.aantal["Koek"], row.aantal["Snoep"], row.aantal["Soep"], row.aantal["Chips"], row.hoeveelheid_geld, row.geboortedatum])
+            totaal_fris += row.aantal["Fris"]
+            totaal_tosti += row.aantal["Tosti"]
+            totaal_bier += row.aantal["Bier"]
+            totaal_koek += row.aantal["Koek"]
+            totaal_sterk += row.aantal["Sterk"]
+            totaal_wijn += row.aantal["Wijn"]
+            totaal_snoep += row.aantal["Snoep"]
+            totaal_chips += row.aantal["Chips"]
+            totaal_soep += row.aantal["Soep"]
             totaal_geld += row.hoeveelheid_geld
-            totaal_koek += row.aantal_koekjes
-            totaal_sterk += row.aantal_sterke_drank
-            totaal_wijn += row.aantal_wijn
-            totaal_snoep += row.aantal_snoep
-            totaal_chips += row.aantal_chips
-            totaal_soep += row.aantal_soep
         file_now2.writerow(['Totaal', totaal_fris, totaal_tosti, totaal_bier, totaal_sterk, totaal_wijn, totaal_koek, \
                             totaal_snoep, totaal_soep, totaal_chips, totaal_geld, " "])
         omzet_fris = totaal_fris*PRIJS_FRIS
