@@ -46,21 +46,21 @@ except IOError as err:
     sys.exit(err.args)
 
 producten=[["Fris",PRIJS_FRIS],["Tosti",PRIJS_TOSTI],["Soep",PRIJS_SOEP],["Snoep",PRIJS_SNOEP],["Koek",PRIJS_KOEK],["Chips",PRIJS_CHIPS],["Bier",PRIJS_BIER],["Wijn",PRIJS_WIJN],["Sterk",PRIJS_STERK]]
+gebruiker = ""
 
+def show_frame(scherm):
+    frames[scherm].voorbereiding()
+    frames[scherm].tkraise()
 
 class MainApplication(tk.Tk):
 
-    def __init__(self, *args, **kwargs):
-        
-        tk.Tk.__init__(self, *args, **kwargs)
+    def __init__(self):
+        tk.Tk.__init__(self)
         self.title("Streepsysteem Studievereniging Mens, versie %s" % (VERSIE))
         
-        container = tk.Frame(self)
-
-        container.pack(side="top", fill="both", expand = True)
-
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        # Dit maakt dat de frames even groot zijn als het window
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         # Fullscreen mogelijkheid
         self.fullscreenstate = True
@@ -70,27 +70,16 @@ class MainApplication(tk.Tk):
         
         if not debuggen:
             self.protocol("WM_DELETE_WINDOW", self.stop_programma)
-        
-        # Naam van de gebruiker
-        self.content = ""
 
-        self.frames = {}
+        global frames 
+        frames = {}
 
         for F in (LoginScherm, StreepScherm, AdminScherm):
 
-            frame = F(container, self)
+            frames[F] = F(self)
+            frames[F].grid(row=0, column=0, sticky="nsew")
 
-            self.frames[F] = frame
-
-            frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame(LoginScherm)
-
-    def show_frame(self, cont):
-
-        frame = self.frames[cont]
-        frame.voorbereiding()
-        frame.tkraise()
+        show_frame(LoginScherm)
         
     def toggle_fullscreen(self, event=None):
         self.fullscreenstate = not self.fullscreenstate
@@ -115,16 +104,13 @@ class MainApplication(tk.Tk):
         
 class LoginScherm(tk.Frame):
 
-    def __init__(self, parent, controller):
-        self.controller = controller
-        tk.Frame.__init__(self,parent)
+    def __init__(self, parent):
         self.Achtergrondkleur = "yellow"
-        tk.Frame.configure(self,background = self.Achtergrondkleur)
+        tk.Frame.__init__(self,parent,bg=self.Achtergrondkleur)
         
-        self.pack(side="top", fill="both", expand=True)
         # Invoer van eigen naam
         self.naam = tk.Entry(self, justify=tk.CENTER, font="Calibri, 20", bd=0)
-        self.naam.pack(ipady=20, padx=100, pady=50)
+        self.naam.pack(side="top", ipady=20, padx=100, pady=50)
         self.naam.bind("<Return>", self.check_name)
         
         # Informatie ruimte
@@ -133,19 +119,19 @@ class LoginScherm(tk.Frame):
         self.response.pack(padx=100)
         
         # Mens-logo
-        ML = Image.open('Images\menslogo.png')
-        achtergrond = ImageTk.PhotoImage(ML.resize((408,432), Image.ANTIALIAS))
+        achtergrond = ImageTk.PhotoImage(Image.open('Images\menslogo.png'))
         self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
         self.backlabel.image = achtergrond
         self.backlabel.pack(pady=50)
         
     def voorbereiding(self):
-        # Roep deze functie op voor het frame naar voren wordt gebracht.
+        # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
         self.response.delete(1.0,tk.END)
         self.naam.delete(0, tk.END)
         self.naam.focus()
         
     def check_name(self, event):
+        global gebruiker
         first_name = self.naam.get().title().strip()
         self.response.configure(bg=self.Achtergrondkleur, fg="black")
         if voornamen.count(first_name) == 0:
@@ -157,7 +143,7 @@ class LoginScherm(tk.Frame):
             for lid in leden.rij:
                 if first_name == lid.voornaam:
                     vol_naam = "%s %s" %(lid.voornaam, lid.achternaam)
-                    self.controller.content = vol_naam
+                    gebruiker = vol_naam
                     self.login_succes()
         else:
             self.response.delete(1.0,tk.END)
@@ -177,12 +163,12 @@ class LoginScherm(tk.Frame):
                 self.btn_dict[person].pack()
     
     def reg_naam(self,vol_naam):
-        self.controller.content = vol_naam
+        global gebruiker
+        gebruiker = vol_naam
         for person in self.nu_rij:
             self.btn_dict[person].destroy()
         # Mens-logo
-        ML = Image.open('menslogo.png')
-        achtergrond = ImageTk.PhotoImage(ML.resize((408,432), Image.ANTIALIAS))
+        achtergrond = ImageTk.PhotoImage(Image.open('menslogo.png'))
         self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
         self.backlabel.image = achtergrond
         self.backlabel.pack(pady=50)
@@ -191,92 +177,95 @@ class LoginScherm(tk.Frame):
     def login_succes(self):
         # Welkom
         self.response.delete(1.0,tk.END)
-        self.response.insert(1.0, "Welkom \n%s!" % (self.controller.content))
+        self.response.insert(1.0, "Welkom \n%s!" % (gebruiker))
         self.response.tag_add("center", 1.0, "end")
         self.update_idletasks()
         time.sleep(.1)
         
-        self.controller.show_frame(StreepScherm)
+        show_frame(StreepScherm)
         
 class StreepScherm(tk.Frame):
 
-    def __init__(self, parent, controller):
-        self.controller = controller
-        tk.Frame.__init__(self, parent)
+    def __init__(self, parent):
         self.Achtergrondkleur = "medium spring green"
-        self.lettertype = ("Calibri, 16")
-        tk.Frame.configure(self,background = self.Achtergrondkleur)
+        self.lettertype = ("Calibri, 15")
+        tk.Frame.__init__(self,parent,bg=self.Achtergrondkleur)
         self.images = {}
         self.gestreept = {}
-        self.buttons = {}
         for P in producten:
             self.images[P[0]] = ImageTk.PhotoImage(Image.open("Images\\"+P[0]+".png"))
             self.gestreept[P[0]] = 0
         
-        self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.left_frame = tk.Frame(self, bg=self.Achtergrondkleur)
+        self.right_frame = tk.Frame(self, bg=self.Achtergrondkleur)
+        self.left_frame.pack(side="left", fill="both", expand=True)
+        self.right_frame.pack(side="right", fill="both", expand=False)
+        
         for x in range(7):
-            tk.Grid.columnconfigure(self, x, weight=1)
+            self.left_frame.grid_columnconfigure(x, weight=1)
         
         for y in range(18):
-            tk.Grid.rowconfigure(self, y, weight=1)
+            self.left_frame.grid_rowconfigure(y, weight=1)
         
         action = lambda: self.doe_aankoop()
-        self.stopknop = tk.Button(self, text = "Doe aankoop", command = action, font=self.lettertype).grid(row = 1, column = 2, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.tekst_naam = tk.Text(self, width=20, height = 2, bd=0, background = self.Achtergrondkleur, font=self.lettertype)
+        tk.Button(self.left_frame, text = "Doe aankoop", command = action, font=self.lettertype).grid(row = 1, column = 2, sticky="nsew")
+        action = lambda: show_frame(LoginScherm)
+        tk.Button(self.left_frame, text = "Terug", command = action, font=self.lettertype).grid(row = 1, column = 1, sticky="nsew")
+        self.tekst_naam = tk.Text(self.right_frame, width=20, height = 2, bd=0, background = self.Achtergrondkleur, font=self.lettertype)
         self.tekst_naam.tag_configure("center", justify='center')
-        self.tekst_naam.grid(row = 1, column = 5, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.tekst_consumptie = tk.Text(self, width=30, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
-        self.tekst_consumptie.grid(row = 2, column = 5, rowspan = 2, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.tekst_nu_gestreept = tk.Text(self, width=30, height=10, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
-        self.tekst_nu_gestreept.grid(row = 4, column = 5, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.tekst_naam.pack(side="top")
+        self.tekst_al_gestreept = tk.Text(self.right_frame, width=30, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_al_gestreept.pack(side="top")
+        self.tekst_nu_gestreept = tk.Text(self.right_frame, width=30, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_nu_gestreept.pack(side="top")
         
         self.euro = u"\u20AC"
                 
         posrow=2; poscol=1
         for P in producten:
             action = lambda x = P[0]: self.nu_gestreept(x)
-            tk.Button(self, image=self.images[P[0]], text="%s %.2f" %(self.euro, P[1]), compound="top", font=self.lettertype, bd=0, bg=self.Achtergrondkleur, command=action).grid(row=posrow, column=poscol)
-            if poscol==3:
-                poscol=1
-                posrow+=1
-            else:
+            tk.Button(self.left_frame, image=self.images[P[0]], text="%s %.2f" %(self.euro, P[1]), compound="top", font=self.lettertype, bd=0, bg=self.Achtergrondkleur, command=action).grid(row=posrow, column=poscol)
+            if posrow==4:
+                posrow=2
                 poscol+=1
+            else:
+                posrow+=1
     
     def voorbereiding(self):
         # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
-        self.tekst_naam.insert(0.0, "\nHoi "+self.controller.content+"!")
+        self.tekst_naam.delete(0.0, tk.END)
+        self.tekst_al_gestreept.delete(0.0, tk.END)
+        self.tekst_nu_gestreept.delete(0.0, tk.END)
+        self.tekst_naam.insert(0.0, "\nHoi "+gebruiker+"!")
         self.tekst_naam.tag_add("center", 0.0, "end")
         al_gestreept = "\n\nHuidige aantal consumpties:\n\n"
         for lid in leden.rij:
-            if lid.naam == self.controller.content:
+            if lid.naam == gebruiker:
                 for P in producten:
                     if lid.aantal[P[0]] > 0:
                         al_gestreept += P[0]+": \t\t%.0f \n" %(lid.aantal[P[0]])
-                self.tekst_consumptie.insert(0.0, al_gestreept+"_______________________\nHuidig saldo \t\t%s %.2f" %(self.euro, lid.hoeveelheid_geld))
+                self.tekst_al_gestreept.insert(0.0, al_gestreept+"_______________________\nHuidig saldo \t\t%s %.2f" %(self.euro, lid.hoeveelheid_geld))
         
     def doe_aankoop(self):
         for lid in leden.rij:
-            if lid.naam == self.controller.content:
+            if lid.naam == gebruiker:
                 lid.hoeveelheid_geld += self.additief_saldo
                 for P in producten:
                     lid.aantal[P[0]] += self.gestreept[P[0]]
                     self.gestreept[P[0]]=0
-        self.controller.show_frame(LoginScherm)
-        self.tekst_consumptie.delete(0.0, tk.END)
-        self.tekst_nu_gestreept.delete(0.0, tk.END)
-        self.tekst_naam.delete(0.0, tk.END)
+        show_frame(LoginScherm)
         
     def nu_gestreept(self, artikel):
         self.gestreept[artikel]+=1
         self.tekst_nu_gestreept.delete(0.0, tk.END)
         self.additief_saldo=0
-        nu_gestreept = ""
+        nu_gestreept = "Nieuwe consumpties\n\n"
         for P in producten:
             if self.gestreept[P[0]] > 0:
                 nu_gestreept += P[0]+": \t\t%.0f \n" %(self.gestreept[P[0]])
                 self.additief_saldo += self.gestreept[P[0]]*P[1]
         for lid in leden.rij:
-            if lid.naam == self.controller.content:
+            if lid.naam == gebruiker:
                 nu_gestreept += "_______________________\nAdditief saldo \t\t%s %.2f\n\n_______________________\nNieuw saldo \t\t%s %.2f" %(self.euro, self.additief_saldo, self.euro, lid.hoeveelheid_geld+self.additief_saldo)
         self.tekst_nu_gestreept.insert(0.0, nu_gestreept)
         
@@ -285,11 +274,9 @@ class StreepScherm(tk.Frame):
 
 class AdminScherm(tk.Frame):
 
-    def __init__(self, parent, controller):
-        self.controller = controller
-        tk.Frame.__init__(self, parent)
+    def __init__(self, parent):
         self.Achtergrondkleur = "deep sky blue"
-        tk.Frame.configure(self,background = self.Achtergrondkleur)
+        tk.Frame.__init__(self,parent,bg=self.Achtergrondkleur)
 
     def voorbereiding(self):
         # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
