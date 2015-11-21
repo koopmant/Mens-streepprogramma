@@ -6,20 +6,7 @@ import tkMessageBox
 import os, sys, shutil
 
 #===============================================================================
-# Aan te passen door Penningmeester AC
-#===============================================================================
-PRIJS_BIER = 0.70
-PRIJS_TOSTI = 0.70
-PRIJS_KOEK = 0.40
-PRIJS_SNOEP = 0.60 
-PRIJS_FRIS = 0.65
-PRIJS_STERK = 1.00
-PRIJS_WIJN = 0.85
-PRIJS_SOEP = 0.50
-PRIJS_CHIPS = 0.60
-
-#===============================================================================
-# Overige instellingen
+# Instellingen
 #===============================================================================
 
 VERSIE = "November 2015"
@@ -34,7 +21,7 @@ debuggen = False
 
 try:
     missingfiles=[]
-    for essentialfile in ['Streeplijst_0000-00.csv','Images\\menslogo.png',\
+    for essentialfile in ['Streeplijst_0000-00.csv','Images\\menslogo.png','Images\\NoPicture.png',\
                           'Images\\Bier.png','Images\\Fris.png','Images\\Snoep.png',\
                           'Images\\Koek.png','Images\\Tosti.png','Images\\Wijn.png',\
                           'Images\\Sterk.png','Images\\Soep.png','Images\\Chips.png']:
@@ -44,13 +31,6 @@ try:
         raise IOError('---'+time.strftime("%Y-%m-%d - %H:%M:%S")+'--- Bestand(en) niet aanwezig. Zo kan ik toch niet werken...', missingfiles)
 except IOError as err:
     sys.exit(err.args)
-
-producten=[["Fris",PRIJS_FRIS],["Tosti",PRIJS_TOSTI],["Soep",PRIJS_SOEP],["Snoep",PRIJS_SNOEP],["Koek",PRIJS_KOEK],["Chips",PRIJS_CHIPS],["Bier",PRIJS_BIER],["Wijn",PRIJS_WIJN],["Sterk",PRIJS_STERK]]
-gebruiker = ""
-
-def show_frame(scherm):
-    frames[scherm].voorbereiding()
-    frames[scherm].tkraise()
 
 class MainApplication(tk.Tk):
 
@@ -70,16 +50,21 @@ class MainApplication(tk.Tk):
         
         if not debuggen:
             self.protocol("WM_DELETE_WINDOW", self.stop_programma)
+            
+        self.gebruiker = ""
 
-        global frames 
-        frames = {}
+        self.frames = {}
 
         for F in (LoginScherm, StreepScherm, AdminScherm):
 
-            frames[F] = F(self)
-            frames[F].grid(row=0, column=0, sticky="nsew")
+            self.frames[F] = F(self)
+            self.frames[F].grid(row=0, column=0, sticky="nsew")
 
-        show_frame(LoginScherm)
+        self.show_frame(LoginScherm)
+        
+    def show_frame(self,scherm):
+        self.frames[scherm].voorbereiding()
+        self.frames[scherm].tkraise()
         
     def toggle_fullscreen(self, event=None):
         self.fullscreenstate = not self.fullscreenstate
@@ -119,9 +104,9 @@ class LoginScherm(tk.Frame):
         self.response.pack(padx=100)
         
         # Mens-logo
-        achtergrond = ImageTk.PhotoImage(Image.open('Images\menslogo.png'))
-        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
-        self.backlabel.image = achtergrond
+        self.menslogo = ImageTk.PhotoImage(Image.open('Images\\menslogo.png'))
+        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= self.menslogo)
+        self.backlabel.image = self.menslogo
         self.backlabel.pack(pady=50)
         
     def voorbereiding(self):
@@ -131,7 +116,6 @@ class LoginScherm(tk.Frame):
         self.naam.focus()
         
     def check_name(self, event):
-        global gebruiker
         first_name = self.naam.get().title().strip()
         self.response.configure(bg=self.Achtergrondkleur, fg="black")
         if voornamen.count(first_name) == 0:
@@ -140,11 +124,11 @@ class LoginScherm(tk.Frame):
             self.response.tag_add("center", 1.0, "end")
             self.response.configure(background = "red4", fg = "snow")            
         elif voornamen.count(first_name) == 1:
-            for lid in leden.rij:
+            for lid in leden:
                 if first_name == lid.voornaam:
                     vol_naam = "%s %s" %(lid.voornaam, lid.achternaam)
-                    gebruiker = vol_naam
-                    self.login_succes()
+                    root.gebruiker = vol_naam
+                    root.show_frame(StreepScherm)
         else:
             self.response.delete(1.0,tk.END)
             self.response.insert(1.0, "Kies uw naam")
@@ -152,37 +136,25 @@ class LoginScherm(tk.Frame):
             self.backlabel.destroy()
             self.nu_rij = []
             self.btn_dict = {}
-            for lid in leden.rij:
+            for lid in leden:
                 if first_name == lid.voornaam:
                     vol_naam = "%s %s" %(lid.voornaam, lid.achternaam)
                     self.nu_rij.append(vol_naam)
             for person in self.nu_rij:
                 action = lambda x = person: self.reg_naam(x)
-                self.btn_dict[person] = tk.Button(self, width = 40, text = person, \
-                                            command = action, bg = 'thistle2', activebackground = "thistle3")
-                self.btn_dict[person].pack()
+                self.btn_dict[person] = tk.Button(self, width = 40, text = person, font="Calibri, 16", \
+                                            command = action, bg = self.Achtergrondkleur, activebackground="yellow2")
+                self.btn_dict[person].pack(pady=10)
     
     def reg_naam(self,vol_naam):
-        global gebruiker
-        gebruiker = vol_naam
+        root.gebruiker = vol_naam
+        root.show_frame(StreepScherm)
         for person in self.nu_rij:
             self.btn_dict[person].destroy()
         # Mens-logo
-        achtergrond = ImageTk.PhotoImage(Image.open('menslogo.png'))
-        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= achtergrond)
-        self.backlabel.image = achtergrond
+        self.backlabel = tk.Label(self, bg=self.Achtergrondkleur, image= self.menslogo)
+        self.backlabel.image = self.menslogo
         self.backlabel.pack(pady=50)
-        self.login_succes()
-        
-    def login_succes(self):
-        # Welkom
-        self.response.delete(1.0,tk.END)
-        self.response.insert(1.0, "Welkom \n%s!" % (gebruiker))
-        self.response.tag_add("center", 1.0, "end")
-        self.update_idletasks()
-        time.sleep(.1)
-        
-        show_frame(StreepScherm)
         
 class StreepScherm(tk.Frame):
 
@@ -192,81 +164,102 @@ class StreepScherm(tk.Frame):
         tk.Frame.__init__(self,parent,bg=self.Achtergrondkleur)
         self.images = {}
         self.gestreept = {}
-        for P in producten:
-            self.images[P[0]] = ImageTk.PhotoImage(Image.open("Images\\"+P[0]+".png"))
-            self.gestreept[P[0]] = 0
+        for i in range(len(producten)):
+            if os.path.isfile('Images\\'+producten[i]+'.png'):
+                self.images[producten[i]] = ImageTk.PhotoImage(Image.open('Images\\'+producten[i]+'.png'))
+            else:
+                self.images[producten[i]] = ImageTk.PhotoImage(Image.open('Images\\NoPicture.png'))
+            self.gestreept[producten[i]] = 0
         
         self.left_frame = tk.Frame(self, bg=self.Achtergrondkleur)
         self.right_frame = tk.Frame(self, bg=self.Achtergrondkleur)
         self.left_frame.pack(side="left", fill="both", expand=True)
-        self.right_frame.pack(side="right", fill="both", expand=False)
+        self.right_frame.pack(side="right", fill="both", expand=False, padx=20)
         
-        for x in range(7):
+        for x in range(5):
             self.left_frame.grid_columnconfigure(x, weight=1)
         
-        for y in range(18):
+        for y in range(5):
             self.left_frame.grid_rowconfigure(y, weight=1)
         
         action = lambda: self.doe_aankoop()
         tk.Button(self.left_frame, text = "Doe aankoop", command = action, font=self.lettertype).grid(row = 1, column = 2, sticky="nsew")
-        action = lambda: show_frame(LoginScherm)
+        action = lambda: root.show_frame(LoginScherm)
         tk.Button(self.left_frame, text = "Terug", command = action, font=self.lettertype).grid(row = 1, column = 1, sticky="nsew")
-        self.tekst_naam = tk.Text(self.right_frame, width=20, height = 2, bd=0, background = self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_naam = tk.Text(self.right_frame, width=23, height = 2, bg=self.Achtergrondkleur, bd=0, font=self.lettertype)
         self.tekst_naam.tag_configure("center", justify='center')
-        self.tekst_naam.pack(side="top")
-        self.tekst_al_gestreept = tk.Text(self.right_frame, width=30, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_naam.pack(side="top", pady=20)
+        self.tekst_al_gestreept = tk.Text(self.right_frame, width=23, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
         self.tekst_al_gestreept.pack(side="top")
-        self.tekst_nu_gestreept = tk.Text(self.right_frame, width=30, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
+        self.tekst_nu_gestreept = tk.Text(self.right_frame, width=23, height=len(producten)+7, bd=0, bg=self.Achtergrondkleur, font=self.lettertype)
         self.tekst_nu_gestreept.pack(side="top")
         
         self.euro = u"\u20AC"
+        self.a = u"\u00E0"
                 
         posrow=2; poscol=1
-        for P in producten:
-            action = lambda x = P[0]: self.nu_gestreept(x)
-            tk.Button(self.left_frame, image=self.images[P[0]], text="%s %.2f" %(self.euro, P[1]), compound="top", font=self.lettertype, bd=0, bg=self.Achtergrondkleur, command=action).grid(row=posrow, column=poscol)
+        for i in range(len(producten)):
+            action = lambda x = producten[i]: self.nu_gestreept(x)
+            foo=tk.Button(self.left_frame, image=self.images[producten[i]], text="%s %s %s %.2f" %(producten[i], self.a, self.euro, prijzen[i]), compound="top", font=self.lettertype, bd=0, bg=self.Achtergrondkleur, command=action)
+            foo.grid(row=posrow, column=poscol)
+            foo.bind("<Button-3>",lambda event, x = producten[i]: self.nu_gestreept(x,-1))
             if posrow==4:
                 posrow=2
                 poscol+=1
             else:
                 posrow+=1
+        self.bind("b",lambda event, x="Bier":self.nu_gestreept(x))
+        self.bind("f",lambda event, x="Fris":self.nu_gestreept(x))
+        self.bind("t",lambda event, x="Tosti":self.nu_gestreept(x))
+        self.bind("s",lambda event, x="Snoep":self.nu_gestreept(x))
+        self.bind("k",lambda event, x="Koek":self.nu_gestreept(x))
+        self.bind("c",lambda event, x="Chips":self.nu_gestreept(x))
+        self.bind("B",lambda event, x="Bier":self.nu_gestreept(x,-1))
+        self.bind("F",lambda event, x="Fris":self.nu_gestreept(x,-1))
+        self.bind("T",lambda event, x="Tosti":self.nu_gestreept(x,-1))
+        self.bind("S",lambda event, x="Snoep":self.nu_gestreept(x,-1))
+        self.bind("K",lambda event, x="Koek":self.nu_gestreept(x,-1))
+        self.bind("C",lambda event, x="Chips":self.nu_gestreept(x,-1))
     
     def voorbereiding(self):
         # Deze functie wordt opgeroepen voor het frame naar voren wordt gebracht.
         self.tekst_naam.delete(0.0, tk.END)
         self.tekst_al_gestreept.delete(0.0, tk.END)
         self.tekst_nu_gestreept.delete(0.0, tk.END)
-        self.tekst_naam.insert(0.0, "\nHoi "+gebruiker+"!")
+        self.gestreept = dict.fromkeys(self.gestreept,0)
+        self.tekst_naam.insert(0.0, "\nHoi "+root.gebruiker+"!")
         self.tekst_naam.tag_add("center", 0.0, "end")
         al_gestreept = "\n\nHuidige aantal consumpties:\n\n"
-        for lid in leden.rij:
-            if lid.naam == gebruiker:
-                for P in producten:
-                    if lid.aantal[P[0]] > 0:
-                        al_gestreept += P[0]+": \t\t%.0f \n" %(lid.aantal[P[0]])
-                self.tekst_al_gestreept.insert(0.0, al_gestreept+"_______________________\nHuidig saldo \t\t%s %.2f" %(self.euro, lid.hoeveelheid_geld))
+        for lid in leden:
+            if lid.naam == root.gebruiker:
+                for i in range(len(producten)):
+                    if lid.aantal[i] > 0:
+                        al_gestreept += producten[i]+": \t%.0f\t%s %.2f \n" %(lid.aantal[i],self.euro,lid.aantal[i]*prijzen[i])
+                self.tekst_al_gestreept.insert(0.0, al_gestreept+"_______________________\nHuidig saldo \t\t%s %.2f" %(self.euro, lid.geld))
+        self.focus_set()
         
     def doe_aankoop(self):
-        for lid in leden.rij:
-            if lid.naam == gebruiker:
-                lid.hoeveelheid_geld += self.additief_saldo
-                for P in producten:
-                    lid.aantal[P[0]] += self.gestreept[P[0]]
-                    self.gestreept[P[0]]=0
-        show_frame(LoginScherm)
+        for lid in leden:
+            if lid.naam == root.gebruiker:
+                lid.geld += self.additief_saldo
+                for i in range(len(producten)):
+                    lid.aantal[i] += self.gestreept[producten[i]]
+                    self.gestreept[producten[i]]=0
+        root.show_frame(LoginScherm)
         
-    def nu_gestreept(self, artikel):
-        self.gestreept[artikel]+=1
+    def nu_gestreept(self, artikel, quantity=1):
+        self.gestreept[artikel]+=quantity
+        if self.gestreept[artikel] < 0: self.gestreept[artikel] = 0
         self.tekst_nu_gestreept.delete(0.0, tk.END)
         self.additief_saldo=0
         nu_gestreept = "Nieuwe consumpties\n\n"
-        for P in producten:
-            if self.gestreept[P[0]] > 0:
-                nu_gestreept += P[0]+": \t\t%.0f \n" %(self.gestreept[P[0]])
-                self.additief_saldo += self.gestreept[P[0]]*P[1]
-        for lid in leden.rij:
-            if lid.naam == gebruiker:
-                nu_gestreept += "_______________________\nAdditief saldo \t\t%s %.2f\n\n_______________________\nNieuw saldo \t\t%s %.2f" %(self.euro, self.additief_saldo, self.euro, lid.hoeveelheid_geld+self.additief_saldo)
+        for i in range(len(producten)):
+            if self.gestreept[producten[i]] > 0:
+                nu_gestreept += producten[i]+": \t%.0f\t%s %.2f \n" %(self.gestreept[producten[i]],self.euro,self.gestreept[producten[i]]*prijzen[i])
+                self.additief_saldo += self.gestreept[producten[i]]*prijzen[i]
+        for lid in leden:
+            if lid.naam == root.gebruiker:
+                nu_gestreept += "_______________________\nAdditief saldo \t\t%s %.2f\n\n_______________________\nNieuw saldo \t\t%s %.2f" %(self.euro, self.additief_saldo, self.euro, lid.geld+self.additief_saldo)
         self.tekst_nu_gestreept.insert(0.0, nu_gestreept)
         
     
@@ -283,37 +276,18 @@ class AdminScherm(tk.Frame):
         pass
         
 class Lid():
-    def __init__(self, naam, fris, tosti, bier, sterk, wijn, koek, snoep, soep, chips, geld, geboortedatum):
-        name = naam.split()
-        self.voornaam = name[0]
-        self.achternaam = ' '.join(name[1:len(name)])
+    def __init__(self, naam, aantallen, geld, geboortedatum):
+        self.voornaam = naam.split()[0]
+        self.achternaam = ' '.join(naam.split()[1:])
         self.naam = str(naam)
-        self.aantal={}
-        self.aantal["Fris"] = int(fris)
-        self.aantal["Tosti"] = int(tosti)
-        self.aantal["Bier"] = int(bier)
-        self.aantal["Sterk"] = int(sterk)
-        self.aantal["Wijn"] = int(wijn)
-        self.aantal["Snoep"] = int(snoep)
-        self.aantal["Koek"] = int(koek)
-        self.aantal["Soep"] = int(soep)
-        self.aantal["Chips"] = int(chips)
-        self.hoeveelheid_geld = float(geld)
+        self.aantal=map(int,aantallen)
+        self.geld = float(geld)
         self.geboortedatum = geboortedatum
 
 
-        
-class LedenLijst():
-    def __init__(self):
-        self.rij = []
-        
-    def add(self, lid):
-        self.rij.append(lid)
-        
-
 
 def check_minderjarig(row):
-    lid = row[11].split("-")
+    lid = row[-1].split("-")
     dag = int(lid[0])
     maand = int(lid[1])
     jaar = int(lid[2])
@@ -339,77 +313,42 @@ if not os.path.isfile(maandlijstbestand):
 
 with open(maandlijstbestand, 'rb') as csvfile:
     file_now = csv.reader(csvfile, delimiter = ';')
-    leden = LedenLijst()
-    namen = []
+    leden = []
     minderjarigen = []
     voornamen = []
     for row in file_now:
-        if row[0] != 'Naam' and row[0] != 'Totaal' and row[0]!='Omzet' and row[0]!="Voorraad":
-            lid = Lid(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11])
-            leden.add(lid)
-            namen.append(row[0])
-            voornamen.append(row[0].split()[0])
+        if row[0] != 'Prijs' and row[0] != 'Naam' and row[0] != 'Totaal' and row[0]!='Omzet' and row[0]!="Voorraad":
+            lid = Lid(row[0], row[1:-2], row[-2], row[-1])
+            leden.append(lid)
+            voornamen.append(lid.voornaam)
             if check_minderjarig(row):
                 minderjarigen.append(row[0])
-        elif row[0] == 'Totaal':
-            totaal_fris = int(row[1])
-            totaal_tosti = int(row[2])
-            totaal_bier = int(row[3])
-            totaal_sterk = int(row[4])
-            totaal_wijn = int(row[5])
-            totaal_koek = int(row[6])
-            totaal_snoep = int(row[7])
-            totaal_soep = int(row[8])
-            totaal_chips = int(row[9])
-            totaal_geld = float(row[10])
-        elif row[0] == 'Omzet':
-            omzet_fris = float(row[1])
-            omzet_tosti = float(row[2])
-            omzet_bier = float(row[3])
-            omzet_sterk = float(row[4])
-            omzet_wijn = float(row[5])
-            omzet_koek = float(row[6])
-            omzet_snoep = float(row[7])
-            omzet_soep = float(row[8])
-            omzet_chips = float(row[9])
-            totaal_omzet = float(row[10])
-    
+        elif row[0] == 'Naam':
+            producten=row[1:-2]
+        elif row[0] == 'Prijs':
+            prijzen=map(float,row[1:-2])
     
     root = MainApplication()
     root.mainloop()
     
     
     with open(maandlijstbestand+'temp', 'wb') as csvfile2:
+        totaal = [0] * (len(producten)+1)
+        omzet = [0] * (len(producten)+1)
         file_now2 = csv.writer(csvfile2, delimiter = ';')
-        file_now2.writerow(['Naam', 'Fris', 'Tosti', 'Bier', 'Sterke drank', 'Wijn', 'Koek', 'Snoep', 'Soep', 'Chips', 'Geld', 'Geboortedatum'])    
-        for row in leden.rij:
-            volled_naam = "%s %s" %(row.voornaam, row.achternaam)
-            file_now2.writerow([volled_naam, row.aantal["Fris"], row.aantal["Tosti"], row.aantal["Bier"], row.aantal["Sterk"], \
-                row.aantal["Wijn"], row.aantal["Koek"], row.aantal["Snoep"], row.aantal["Soep"], row.aantal["Chips"], row.hoeveelheid_geld, row.geboortedatum])
-            totaal_fris += row.aantal["Fris"]
-            totaal_tosti += row.aantal["Tosti"]
-            totaal_bier += row.aantal["Bier"]
-            totaal_koek += row.aantal["Koek"]
-            totaal_sterk += row.aantal["Sterk"]
-            totaal_wijn += row.aantal["Wijn"]
-            totaal_snoep += row.aantal["Snoep"]
-            totaal_chips += row.aantal["Chips"]
-            totaal_soep += row.aantal["Soep"]
-            totaal_geld += row.hoeveelheid_geld
-        file_now2.writerow(['Totaal', totaal_fris, totaal_tosti, totaal_bier, totaal_sterk, totaal_wijn, totaal_koek, \
-                            totaal_snoep, totaal_soep, totaal_chips, totaal_geld, " "])
-        omzet_fris = totaal_fris*PRIJS_FRIS
-        omzet_bier = totaal_bier*PRIJS_BIER
-        omzet_chips = totaal_chips*PRIJS_CHIPS
-        omzet_koek = totaal_koek*PRIJS_KOEK
-        omzet_snoep = totaal_snoep*PRIJS_SNOEP
-        omzet_soep = totaal_soep*PRIJS_SOEP
-        omzet_sterk = totaal_sterk*PRIJS_STERK
-        omzet_tosti = totaal_tosti*PRIJS_TOSTI
-        omzet_wijn = totaal_wijn*PRIJS_WIJN
-        totaal_omzet = omzet_bier+omzet_chips+omzet_fris+omzet_koek+omzet_snoep+omzet_soep+omzet_sterk+omzet_tosti+omzet_wijn
-        file_now2.writerow(['Omzet', omzet_fris, omzet_tosti, omzet_bier, omzet_sterk, omzet_wijn, omzet_koek, omzet_snoep, omzet_soep,\
-                            omzet_chips, totaal_omzet, " "])
+        file_now2.writerow(['Prijs'] + prijzen + ['',''])
+        file_now2.writerow(['Naam'] + producten + ['Geld', 'Geboortedatum'])    
+        for lid in leden:
+            volled_naam = "%s %s" %(lid.voornaam, lid.achternaam)
+            file_now2.writerow([volled_naam] + lid.aantal + [lid.geld, lid.geboortedatum])
+            for i in range(len(producten)):
+                totaal[i] += lid.aantal[i]
+            totaal[-1] += round(lid.geld,2)
+        file_now2.writerow(['Totaal'] + totaal + [''])
+        for i in range(len(producten)):
+            omzet[i] = round(totaal[i]*prijzen[i],2)
+        omzet[-1] = round(sum(omzet[:-1]),2)
+        file_now2.writerow(['Omzet'] + omzet + [''])
     
 shutil.copyfile(maandlijstbestand+'temp', maandlijstbestand)
 os.remove(maandlijstbestand+'temp')

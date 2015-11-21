@@ -1,4 +1,5 @@
-Naam;Fris;Tosti;Bier;Sterke drank;Wijn;Koek;Snoep;Soep;Chips;Geld;Geboortedatum
+Prijs;0.65;0.7;0.5;0.6;0.4;0.6;0.7;0.85;1;;
+Naam;Fris;Tosti;Soep;Snoep;Koek;Chips;Bier;Wijn;Sterk;Geld;Geboortedatum
 Tim Antonisse;0;0;0;0;0;0;0;0;0;0;5-12-1986
 Gijs Berkelmans;0;0;0;0;0;0;0;0;0;0;18-4-1987
 Ayse Ekiz;0;0;0;0;0;0;0;0;0;0;8-9-1985
@@ -37,7 +38,7 @@ Tamara Moll;0;0;0;0;0;0;0;0;0;0;13-7-1991
 Monique Nieman;0;0;0;0;0;0;0;0;0;0;31-10-1990
 Hester van Putten;0;0;0;0;0;0;0;0;0;0;15-6-1991
 Mike van Rijssel;0;0;0;0;0;0;0;0;0;0;10-5-1991
-*Marjolein Schimmel;0;0;0;0;0;0;0;0;0;0;10-3-1990
+Marjolein Schimmel;0;0;0;0;0;0;0;0;0;0;10-3-1990
 Sietske Temminghoff;0;0;0;0;0;0;0;0;0;0;2-2-1991
 Justin Termaat;0;0;0;0;0;0;0;0;0;0;6-4-1991
 Wouter de Wilde;0;0;0;0;0;0;0;0;0;0;11-8-1991
@@ -247,6 +248,6 @@ Myrte de Vries;0;0;0;0;0;0;0;0;0;0;30-4-1996
 Jeroen Walchenbach;0;0;0;0;0;0;0;0;0;0;15-9-1994
 Kirsten Wolthuis;0;0;0;0;0;0;0;0;0;0;3-10-1995
 Chavelli Kensen;0;0;0;0;0;0;0;0;0;0;4-8-1994
-Voorraad;1;1;1;1;1;1;1;1;1; ; 
+Voorraad;1;1;1;1;1;1;1;1;1;;
 Totaal;0;0;0;0;0;0;0;0;0;0;
 Omzet;0;0;0;0;0;0;0;0;0;0;
